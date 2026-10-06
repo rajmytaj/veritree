@@ -1,11 +1,11 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url, registerUser } from './fixtures';
+import { test, expect, url, loginAndVerify } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
-  test('[Primary] Payment form validation', async ({ page, user }) => {
-    // Precondition: logged-in user with a product in the cart, on the payment page
-    await registerUser(page, user);
+  test('[Primary] Payment form validation', async ({ page, apiUser: user }) => {
+    // Precondition: API-created, logged-in user with a product in the cart, on the payment page
+    await loginAndVerify(page, user);
     await page.goto(url('/product_details/1'));
     await page.getByRole('button', { name: 'Add to cart' }).click();
     await page.getByRole('link', { name: 'View Cart' }).click();

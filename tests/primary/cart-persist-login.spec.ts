@@ -1,12 +1,11 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url, registerUser, login } from './fixtures';
+import { test, expect, url, login } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
-  test('[Primary] Cart persists after login', async ({ page, user }) => {
-    // Precondition: an existing account, logged out
-    await registerUser(page, user);
-    await page.getByRole('link', { name: 'Logout' }).click();
+  test('[Primary] Cart persists after login', async ({ page, apiUser: user }) => {
+    // Precondition: an existing account (created via API), logged out
+    await page.goto(url('/login'));
     await expect(page.getByRole('heading', { name: 'Login to your account' })).toBeVisible();
 
     // 1. Add product as guest, then log in with an existing account, open cart

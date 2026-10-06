@@ -1,41 +1,27 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '../primary/fixtures';
+import { test, expect, newUser, createUserViaApi, deleteUserViaApi, loginAndVerify } from '../helpers/fixtures';
 
 test.describe('2. SECONDARY Tests', () => {
-  test('[Secondary] Download invoice after purchase', async ({ page }) => {
+  test('[Secondary] Download invoice after purchase', async ({ page, request }) => {
     test.setTimeout(90_000);
-    const name = `Invoice User ${Date.now()}`;
-    const email = `invoice.${Date.now()}@example.com`;
-    await page.addLocatorHandler(page.getByRole('button', { name: 'Consent' }), async (btn) => {
-      await btn.click();
-    });
+    const user = {
+      ...newUser(),
+      name: `Invoice User ${Date.now()}`,
+      firstName: 'Invoice',
+      lastName: 'Tester',
+      address: '1 Test Street',
+      state: 'BC',
+      city: 'Vancouver',
+      zipcode: 'V6B 1A1',
+      mobile: '6045550100',
+    };
 
     try {
-      // Precondition: register a unique user
-      await page.goto('https://automationexercise.com/login');
-      await page.getByTestId('signup-name').fill(name);
-      await page.getByTestId('signup-email').fill(email);
-      await page.getByTestId('signup-button').click();
-      await expect(page.getByText('Enter Account Information')).toBeVisible();
-      await page.getByLabel('Mr.').check();
-      await page.getByTestId('password').fill('Passw0rd!123');
-      await page.getByTestId('days').selectOption('1');
-      await page.getByTestId('months').selectOption('January');
-      await page.getByTestId('years').selectOption('1990');
-      await page.getByTestId('first_name').fill('Invoice');
-      await page.getByTestId('last_name').fill('Tester');
-      await page.getByTestId('address').fill('1 Test Street');
-      await page.getByTestId('country').selectOption('Canada');
-      await page.getByTestId('state').fill('BC');
-      await page.getByTestId('city').fill('Vancouver');
-      await page.getByTestId('zipcode').fill('V6B 1A1');
-      await page.getByTestId('mobile_number').fill('6045550100');
-      await page.getByTestId('create-account').click();
-      await expect(page.getByText('Account Created!')).toBeVisible();
-      await page.getByTestId('continue-button').click();
-      await expect(page.getByText(`Logged in as ${name}`)).toBeVisible();
+      // Precondition: create a unique user via API and log in
+      await createUserViaApi(request, user);
+      await loginAndVerify(page, user);
 
       // Add a product and go through checkout
       await page.goto('https://automationexercise.com/product_details/1');
@@ -67,8 +53,8 @@ test.describe('2. SECONDARY Tests', () => {
       expect(content).toContain('Invoice Tester');
       expect(content).toMatch(/total purchase amount/i);
     } finally {
-      // Cleanup: delete the account
-      await page.goto('https://automationexercise.com/delete_account');
+      // Cleanup: delete the account via API
+      await deleteUserViaApi(request, user);
     }
   });
 });

@@ -1,6 +1,6 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url } from './fixtures';
+import { test, expect, url } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
   test('[Primary] Change quantity on product detail and add to cart', async ({ page }) => {

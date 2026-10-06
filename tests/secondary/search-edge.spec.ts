@@ -2,7 +2,7 @@
 // seed: tests/seed.spec.ts
 
 import type { Page } from '@playwright/test';
-import { test, expect } from '../primary/fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('2. SECONDARY Tests', () => {
   test('[Secondary] Product search with special characters and case', async ({ page }) => {

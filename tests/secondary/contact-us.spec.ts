@@ -1,7 +1,7 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '../primary/fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('2. SECONDARY Tests', () => {
   test('[Secondary] Contact Us form with file upload', async ({ page }) => {

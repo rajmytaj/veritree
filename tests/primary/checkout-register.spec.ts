@@ -1,6 +1,6 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url, fillAccountForm, deleteAccount } from './fixtures';
+import { test, expect, url, fillAccountForm, deleteAccount } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
   test('[Primary] Checkout while registering during checkout (guest flow)', async ({ page, user }) => {
@@ -51,6 +51,7 @@ test.describe('1. PRIMARY Tests', () => {
     await expect(page.getByRole('link', { name: 'Download Invoice' })).toBeVisible();
 
     // 4. Delete the account
+    // (the UI deletion is verified below; the `user` fixture teardown also deletes via API as a safety net)
     await deleteAccount(page);
   });
 });

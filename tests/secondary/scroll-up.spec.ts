@@ -1,7 +1,7 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '../primary/fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('2. SECONDARY Tests', () => {
   test('[Secondary] Scroll to top via arrow and subscription-free scroll', async ({ page }) => {

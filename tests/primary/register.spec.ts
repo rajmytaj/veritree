@@ -1,6 +1,6 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url, fillAccountForm, deleteAccountIfExists } from './fixtures';
+import { test, expect, url, fillAccountForm } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
   test('[Primary] Register new user', async ({ page, user }) => {
@@ -25,6 +25,6 @@ test.describe('1. PRIMARY Tests', () => {
     await expect(page.getByText(`Logged in as ${user.name}`)).toBeVisible();
 
     // 5. Cleanup (teardown, not part of the assertions): delete the created account
-    // Handled by the `user` fixture teardown (deleteAccountIfExists).
+    // Handled by the `user` fixture teardown (API delete).
   });
 });

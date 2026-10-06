@@ -1,4 +1,4 @@
-import { test as base, expect, selectors, type Page } from '@playwright/test';
+import { test as base, expect, selectors, type APIRequestContext, type Page } from '@playwright/test';
 
 // The site exposes stable data-qa attributes on form controls whose <label>s are not associated with the inputs.
 selectors.setTestIdAttribute('data-qa');
@@ -44,7 +44,46 @@ export function newUser(): User {
 const AD_HOST_PATTERN =
   /(googlesyndication|doubleclick|googleadservices|adservice\.google|googletagmanager|google-analytics|fundingchoicesmessages|adsbygoogle|adnxs|taboola|outbrain|criteo|amazon-adsystem)/i;
 
-export const test = base.extend<{ user: User }>({
+/** Creates the account through POST /api/createAccount. The API reports its result in the JSON body (responseCode). */
+export async function createUserViaApi(request: APIRequestContext, user: User) {
+  const response = await request.post(url('/api/createAccount'), {
+    form: {
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      title: 'Mr',
+      birth_date: '10',
+      birth_month: '5',
+      birth_year: '1990',
+      firstname: user.firstName,
+      lastname: user.lastName,
+      company: user.company,
+      address1: user.address,
+      address2: '',
+      country: user.country,
+      zipcode: user.zipcode,
+      state: user.state,
+      city: user.city,
+      mobile_number: user.mobile,
+    },
+  });
+  const body = JSON.parse(await response.text());
+  expect(body.responseCode, `createAccount: ${body.message}`).toBe(201);
+}
+
+/** Best-effort DELETE /api/deleteAccount; tolerates an account that is already gone and never throws. */
+export async function deleteUserViaApi(request: APIRequestContext, user: Pick<User, 'email' | 'password'>) {
+  try {
+    await request.delete(url('/api/deleteAccount'), {
+      form: { email: user.email, password: user.password },
+      timeout: 15_000,
+    });
+  } catch {
+    // best-effort cleanup
+  }
+}
+
+export const test = base.extend<{ user: User; apiUser: User }>({
   page: async ({ page }, use) => {
     await page.route('**/*', (route) => {
       if (AD_HOST_PATTERN.test(new URL(route.request().url()).hostname)) {
@@ -59,29 +98,25 @@ export const test = base.extend<{ user: User }>({
     await use(page);
   },
 
-  // A unique user. Teardown deletes the account if it still exists.
-  user: async ({ page }, use) => {
+  // A unique user that is NOT created up front (for tests that register through the UI).
+  // Teardown deletes the account via the API if it exists.
+  user: async ({ request }, use) => {
     const user = newUser();
     await use(user);
-    await deleteAccountIfExists(page, user);
+    await deleteUserViaApi(request, user);
+  },
+
+  // A unique user created through the API before the test and deleted via the API afterwards
+  // (tolerates the test having already deleted it).
+  apiUser: async ({ request }, use) => {
+    const user = newUser();
+    await createUserViaApi(request, user);
+    await use(user);
+    await deleteUserViaApi(request, user);
   },
 });
 
 export { expect };
-
-/** Registers `user` through the UI. Ends on the home page, logged in. */
-export async function registerUser(page: Page, user: User) {
-  await page.goto(url('/login'));
-  await page.getByTestId('signup-name').fill(user.name);
-  await page.getByTestId('signup-email').fill(user.email);
-  await page.getByTestId('signup-button').click();
-  await expect(page.getByRole('heading', { name: 'Enter Account Information' })).toBeVisible();
-  await fillAccountForm(page, user);
-  await page.getByTestId('create-account').click();
-  await expect(page.getByRole('heading', { name: 'Account Created!' })).toBeVisible();
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page.getByText(`Logged in as ${user.name}`)).toBeVisible();
-}
 
 /** Fills the "Enter Account Information" form (does not submit). */
 export async function fillAccountForm(page: Page, user: User) {
@@ -116,21 +151,10 @@ export async function deleteAccount(page: Page) {
   await expect(page.getByRole('heading', { name: 'Account Deleted!' })).toBeVisible();
 }
 
-/** Teardown helper: logs in and deletes the account; silently does nothing if the account is already gone. */
-export async function deleteAccountIfExists(page: Page, user: User) {
-  try {
-    await page.context().clearCookies();
-    await login(page, user);
-    const loggedIn = page.getByText(`Logged in as ${user.name}`);
-    const failed = page.getByText('Your email or password is incorrect!');
-    await loggedIn.or(failed).first().waitFor({ timeout: 10_000 });
-    if (await loggedIn.isVisible()) {
-      await page.getByRole('link', { name: 'Delete Account' }).click();
-      await page.getByRole('heading', { name: 'Account Deleted!' }).waitFor({ timeout: 10_000 });
-    }
-  } catch {
-    // best-effort cleanup
-  }
+/** Logs in through the UI form and waits until the header shows the logged-in user. */
+export async function loginAndVerify(page: Page, user: User) {
+  await login(page, user);
+  await expect(page.getByText(`Logged in as ${user.name}`)).toBeVisible();
 }
 
 /** Adds product N via the product list (hover, then overlay Add to cart). index is zero-based. */

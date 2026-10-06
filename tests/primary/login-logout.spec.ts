@@ -1,12 +1,11 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url, registerUser } from './fixtures';
+import { test, expect, url } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
-  test('[Primary] Login with valid credentials and logout', async ({ page, user }) => {
-    // 1. Register user, logout, go to Signup / Login, enter valid email and password, click Login
-    await registerUser(page, user);
-    await page.getByRole('link', { name: 'Logout' }).click();
+  test('[Primary] Login with valid credentials and logout', async ({ page, apiUser: user }) => {
+    // 1. User created via API; go to Signup / Login, enter valid email and password, click Login
+    await page.goto(url('/'));
     await page.getByRole('link', { name: 'Signup / Login' }).click();
     await page.getByTestId('login-email').fill(user.email);
     await page.getByTestId('login-password').fill(user.password);

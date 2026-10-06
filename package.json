@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test:primary": "playwright test tests/primary",
+    "test:secondary": "playwright test tests/secondary"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

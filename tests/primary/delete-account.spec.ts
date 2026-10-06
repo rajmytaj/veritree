@@ -1,12 +1,11 @@
 // spec: specs/automationexercise.plan.md
 // seed: tests/seed.spec.ts
-import { test, expect, url, registerUser, login } from './fixtures';
+import { test, expect, url, login, loginAndVerify } from '../helpers/fixtures';
 
 test.describe('1. PRIMARY Tests', () => {
-  test('[Primary] Delete account', async ({ page, user }) => {
-    // 1. Precondition: register a unique user and be logged in (via setup helper)
-    await registerUser(page, user);
-    await expect(page.getByText(`Logged in as ${user.name}`)).toBeVisible();
+  test('[Primary] Delete account', async ({ page, apiUser: user }) => {
+    // 1. Precondition: a unique user created via API and logged in
+    await loginAndVerify(page, user);
 
     // 2. Click 'Delete Account'
     await page.getByRole('link', { name: 'Delete Account' }).click();
